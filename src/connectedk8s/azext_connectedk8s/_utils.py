@@ -548,6 +548,8 @@ def helm_install_release(resource_manager, chart_path, subscription_id, kubernet
     metadata = get_metadata(resource_manager, "2022-09-01")
     if "dataplaneEndpoints" in metadata:
         notification_endpoint = metadata["dataplaneEndpoints"]["arcGlobalNotificationServiceEndpoint"]
+        if notification_endpoint[-1] != "/":
+            notification_endpoint = notification_endpoint + "/"
         config_endpoint = metadata["dataplaneEndpoints"]["arcConfigEndpoint"]
         his_endpoint = metadata["dataplaneEndpoints"]["arcHybridIdentityServiceEndpoint"]
         if his_endpoint[-1] != "/":
