@@ -3,6 +3,10 @@
 Release History
 ===============
 
+1.6.7b1
+++++++
+* Update for disconnected scenario.
+
 1.6.7
 ++++++
 * Improve Error logs during Arc Onboarding scenarios, Style fixes.

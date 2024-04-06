@@ -177,6 +177,10 @@ def create_connectedk8s(cmd, client, resource_group_name, cluster_name, correlat
     if (infrastructure.lower() == 'azure_stack_hci') and (distribution.lower() in lowbandwith_distros):
         lowbandwidth = True
 
+    winfield_disconnected = False
+    if os.getenv('WINFIELD_KUBECTL_LOCATION'):
+        winfield_disconnected = True
+
     # Install kubectl and helm
     try:
         kubectl_client_location = install_kubectl_client()
@@ -191,8 +195,8 @@ def create_connectedk8s(cmd, client, resource_group_name, cluster_name, correlat
     # Pre onboarding checks
     diagnostic_checks = "Failed"
     try:
-        # if aks_hci lowbandwidth scenario skip, otherwise continue to perform pre-onboarding check
-        if not lowbandwidth:
+        # if Winfield disconnected or aks_hci lowbandwidth scenario, skip, otherwise continue to perform pre-onboarding check.
+        if not winfield_disconnected and not lowbandwidth:
             batchv1_api_instance = kube_client.BatchV1Api()
             storage_space_available = True
 
@@ -246,7 +250,7 @@ def create_connectedk8s(cmd, client, resource_group_name, cluster_name, correlat
         raise ManualInterrupt('Process terminated externally.')
 
     # If the checks didnt pass then stop the onboarding
-    if diagnostic_checks != consts.Diagnostic_Check_Passed and lowbandwidth is False:
+    if diagnostic_checks != consts.Diagnostic_Check_Passed and not winfield_disconnected and not lowbandwidth:
         if storage_space_available:
             logger.warning("The pre-check result logs logs have been saved at this path:" + filepath_with_timestamp +
                            " .\nThese logs can be attached while filing a support ticket for further assistance.\n")
@@ -265,7 +269,7 @@ def create_connectedk8s(cmd, client, resource_group_name, cluster_name, correlat
         raise ValidationError("One or more pre-onboarding diagnostic checks failed and hence not proceeding with \
             cluster onboarding. Please resolve them and try onboarding again.")
 
-    if lowbandwidth is False:
+    if not winfield_disconnected and not lowbandwidth:
         print("The required pre-checks for onboarding have succeeded.")
     else:
         print("Skipped onboarding pre-checks for AKS-HCI low bandwidth scenario. Continuing...")
@@ -2553,6 +2557,9 @@ def troubleshoot(cmd, client, resource_group_name, cluster_name, kube_config=Non
 
 def install_kubectl_client():
     # Return kubectl client path set by user
+    if os.getenv('WINFIELD_KUBECTL_LOCATION'):
+        return os.getenv('WINFIELD_KUBECTL_LOCATION')
+
     try:
 
         # Fetching the current directory where the cli installs the kubectl executable
