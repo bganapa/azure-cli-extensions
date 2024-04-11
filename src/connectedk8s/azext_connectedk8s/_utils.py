@@ -568,7 +568,7 @@ def cleanup_release_install_namespace_if_exists():
 def helm_install_release(resource_manager, chart_path, subscription_id, kubernetes_distro, kubernetes_infra, resource_group_name,
                          cluster_name, location, onboarding_tenant_id, http_proxy, https_proxy, no_proxy, proxy_cert, private_key_pem,
                          kube_config, kube_context, no_wait, values_file, cloud_name, disable_auto_upgrade, enable_custom_locations,
-                         custom_locations_oid, helm_client_location, enable_private_link, arm_metadata, onboarding_timeout="600",
+                         custom_locations_oid, helm_client_location, enable_private_link, arm_metadata, registry_path, onboarding_timeout="600",
                          container_log_path=None):
 
     cmd_helm_install = [helm_client_location, "upgrade", "--install", "azure-arc", chart_path,
@@ -605,7 +605,8 @@ def helm_install_release(resource_manager, chart_path, subscription_id, kubernet
                     "--set", "systemDefaultValues.clusterconnect-agent.notification_dp_endpoint_override={}".format(notification_endpoint),
                     "--set", "systemDefaultValues.clusterconnect-agent.relay_endpoint_suffix_override={}".format(relay_endpoint),
                     "--set", "systemDefaultValues.clusteridentityoperator.his_endpoint_override={}".format(his_endpoint),
-                    "--set", "systemDefaultValues.activeDirectoryEndpoint={}".format(active_directory)
+                    "--set", "systemDefaultValues.activeDirectoryEndpoint={}".format(active_directory),
+                    "--set", "systemDefaultValues.image.repository={}".format(registry_path.split('/')[0])
                 ]
             )
         else:

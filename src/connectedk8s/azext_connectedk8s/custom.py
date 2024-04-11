@@ -502,7 +502,7 @@ def create_connectedk8s(cmd, client, resource_group_name, cluster_name, correlat
                                location, onboarding_tenant_id, http_proxy, https_proxy, no_proxy, proxy_cert,
                                private_key_pem, kube_config, kube_context, no_wait, values_file, azure_cloud,
                                disable_auto_upgrade, enable_custom_locations, custom_locations_oid,
-                               helm_client_location, enable_private_link, arm_metadata,
+                               helm_client_location, enable_private_link, arm_metadata, registry_path,
                                onboarding_timeout, container_log_path)
     return put_cc_response
 
