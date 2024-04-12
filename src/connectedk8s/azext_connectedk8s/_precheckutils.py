@@ -165,7 +165,7 @@ def executing_cluster_diagnostic_checks_job(corev1_api_instance, batchv1_api_ins
         chart_path = azext_utils.get_chart_path(consts.Cluster_Diagnostic_Checks_Job_Registry_Path, kube_config,
                                                 kube_context, helm_client_location,
                                                 consts.Pre_Onboarding_Helm_Charts_Folder_Name,
-                                                consts.Pre_Onboarding_Helm_Charts_Release_Name, False)
+                                                consts.Pre_Onboarding_Helm_Charts_Release_Name)
 
         helm_install_release_cluster_diagnostic_checks(chart_path, location, http_proxy, https_proxy, no_proxy,
                                                        proxy_cert, azure_cloud, kube_config, kube_context,

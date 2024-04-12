@@ -11,7 +11,6 @@ import os
 import json
 import tempfile
 import time
-from packaging import version
 import subprocess
 from subprocess import Popen, PIPE, run, STDOUT, call, DEVNULL
 from base64 import b64encode, b64decode
@@ -1207,8 +1206,6 @@ def update_connected_cluster(cmd, client, resource_group_name, cluster_name, htt
         agent_version = connected_cluster.agent_version
         registry_path = reg_path_array[0] + ":" + agent_version
 
-    check_operation_support("update (properties)", agent_version)
-
     telemetry.add_extension_event('connectedk8s', {'Context.Default.AzureCLI.AgentVersion': agent_version})
 
     # Get Helm chart path
@@ -1615,8 +1612,6 @@ def enable_features(cmd, client, resource_group_name, cluster_name, features, ku
         agent_version = connected_cluster.agent_version
         registry_path = reg_path_array[0] + ":" + agent_version
 
-    check_operation_support("enable-features", agent_version)
-
     telemetry.add_extension_event('connectedk8s', {'Context.Default.AzureCLI.AgentVersion': agent_version})
 
     # Get Helm chart path
@@ -1749,8 +1744,6 @@ def get_chart_and_disable_features(cmd, connected_cluster, kube_config, kube_con
     if connected_cluster.agent_version is not None:
         agent_version = connected_cluster.agent_version
         registry_path = reg_path_array[0] + ":" + agent_version
-
-    check_operation_support("disable-features", agent_version)
 
     telemetry.add_extension_event('connectedk8s', {'Context.Default.AzureCLI.AgentVersion': agent_version})
 
@@ -2637,11 +2630,3 @@ def crd_cleanup_force_delete(kubectl_client_location, kube_config, kube_context)
                     patch_cmd.extend(["--context", kube_context])
                 output_patch_cmd = Popen(patch_cmd, stdout=PIPE, stderr=PIPE)
                 _, error_helm_delete = output_patch_cmd.communicate()
-
-
-def check_operation_support(operation_name, agent_version):
-    error_summary = 'This CLI version does not support {} for Agents older than v1.14'.format(operation_name)
-    # Version check for stable release train (agent_version will be in X.Y.Z format as opposed to X.Y.Z-NONSTABLE)
-    if '-' not in agent_version and (version.parse(agent_version) < version.parse("1.14.0")):
-        telemetry.set_exception(exception='Operation not supported on older Agents', fault_type=consts.Operation_Not_Supported_Fault_Type, summary=error_summary)
-        raise ClientRequestError(error_summary, recommendation="Please upgrade to the latest version of the Agents using 'az connectedk8s upgrade -g <rg_name> -n <cluster_name>'.")
