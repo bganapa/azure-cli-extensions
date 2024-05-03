@@ -491,6 +491,7 @@ def create_connectedk8s(cmd, client, resource_group_name, cluster_name, correlat
     put_cc_response = create_cc_resource(client, resource_group_name, cluster_name, cc, no_wait)
     put_cc_response = LongRunningOperation(cmd.cli_ctx)(put_cc_response)
     print("Azure resource provisioning has finished.")
+
     # Checking if custom locations rp is registered and fetching oid if it is registered
     enable_custom_locations, custom_locations_oid = check_cl_registration_and_get_oid(cmd, cl_oid, subscription_id)
 
@@ -502,7 +503,7 @@ def create_connectedk8s(cmd, client, resource_group_name, cluster_name, correlat
                                private_key_pem, kube_config, kube_context, no_wait, values_file, azure_cloud,
                                disable_auto_upgrade, enable_custom_locations, custom_locations_oid,
                                helm_client_location, enable_private_link, arm_metadata, registry_path,
-                               onboarding_timeout, container_log_path)
+                               put_cc_response.identity.principal_id, onboarding_timeout, container_log_path)
     return put_cc_response
 
 
@@ -2058,6 +2059,7 @@ def client_side_proxy_wrapper(cmd,
     # initializations
     user_type = 'sat'
     creds = ''
+    dict_file = {'server': {'httpPort': int(client_proxy_port), 'httpsPort': int(api_server_port)}, 'identity': {'tenantID': tenant_id}}
 
     # if service account token is not passed
     if token is None:
@@ -2067,17 +2069,9 @@ def client_side_proxy_wrapper(cmd,
         user_type = account['user']['type']
 
         if user_type == 'user':
-            dict_file = {'server': {'httpPort': int(client_proxy_port), 'httpsPort': int(api_server_port)}, 'identity': {'tenantID': tenant_id, 'clientID': consts.CLIENTPROXY_CLIENT_ID}}
+            dict_file['identity']['clientID'] = consts.CLIENTPROXY_CLIENT_ID
         else:
-            dict_file = {'server': {'httpPort': int(client_proxy_port), 'httpsPort': int(api_server_port)}, 'identity': {'tenantID': tenant_id, 'clientID': account['user']['name']}}
-
-        if cloud == 'DOGFOOD':
-            dict_file['cloud'] = 'AzureDogFood'
-
-        if cloud == consts.Azure_ChinaCloudName:
-            dict_file['cloud'] = 'AzureChinaCloud'
-        elif cloud == consts.Azure_USGovCloudName:
-            dict_file['cloud'] = 'AzureUSGovernmentCloud'
+            dict_file['identity']['clientID'] = account['user']['name']
 
         if not utils.is_cli_using_msal_auth():
             # Fetching creds
@@ -2113,15 +2107,26 @@ def client_side_proxy_wrapper(cmd,
 
             if user_type != 'user':
                 dict_file['identity']['clientSecret'] = creds
+
+    if cloud == 'DOGFOOD':
+        dict_file['cloud'] = 'AzureDogFood'
+    elif cloud == consts.Azure_ChinaCloudName:
+        dict_file['cloud'] = 'AzureChinaCloud'
+    elif cloud == consts.Azure_USGovCloudName:
+        dict_file['cloud'] = 'AzureUSGovernmentCloud'
     else:
-        dict_file = {'server': {'httpPort': int(client_proxy_port), 'httpsPort': int(api_server_port)}}
-        if cloud == consts.Azure_ChinaCloudName:
-            dict_file['cloud'] = 'AzureChinaCloud'
-        elif cloud == consts.Azure_USGovCloudName:
-            dict_file['cloud'] = 'AzureUSGovernmentCloud'
+        dict_file['cloud'] = cloud
+
+    # Winfield configurations.
+    arm_metadata = utils.get_metadata(cmd.cli_ctx.cloud.endpoints.resource_manager)
+    if "dataplaneEndpoints" in arm_metadata:
+        dict_file['cloudConfig'] = {}
+        dict_file['cloudConfig']['resourceManagerEndpoint'] = arm_metadata['resourceManager']
+        relay_endpoint_suffix = arm_metadata['suffixes']['relayEndpointSuffix']
+        dict_file['cloudConfig']['serviceBusEndpointSuffix'] = (relay_endpoint_suffix)[1:] if relay_endpoint_suffix[0] == '.' else relay_endpoint_suffix
+        dict_file['cloudConfig']['activeDirectoryEndpoint'] = arm_metadata['authentication']['loginEndpoint']
 
     telemetry.set_debug_info('User type is ', user_type)
-
     try:
         with open(config_file_location, 'w') as f:
             yaml.dump(dict_file, f, default_flow_style=False)
