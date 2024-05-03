@@ -3,7 +3,6 @@
 # Licensed under the MIT License. See License.txt in the project root for license information.
 # --------------------------------------------------------------------------------------------
 
-from argparse import Namespace
 import errno
 import logging
 from logging import exception
@@ -11,20 +10,15 @@ import os
 import json
 import tempfile
 import time
-import subprocess
 from subprocess import Popen, PIPE, run, STDOUT, call, DEVNULL
 from base64 import b64encode, b64decode
 import stat
 import platform
 from xml.dom.pulldom import default_bufsize
-from azure.core.exceptions import ClientAuthenticationError
 import yaml
 import urllib.request
 import shutil
-from _thread import interrupt_main
-from psutil import process_iter, NoSuchProcess, AccessDenied, ZombieProcess, net_connections
 from azure.cli.core import get_default_cli
-from knack.util import CLIError
 from knack.log import get_logger
 from knack.prompting import prompt_y_n
 from knack.prompting import NoTTYException
@@ -53,11 +47,10 @@ import azext_connectedk8s._clientproxyutils as clientproxyutils
 import azext_connectedk8s._troubleshootutils as troubleshootutils
 import azext_connectedk8s._precheckutils as precheckutils
 from glob import glob
-from .vendored_sdks.models import ConnectedCluster, ConnectedClusterIdentity, ConnectedClusterPatch, \
+from .vendored_sdks.models import ConnectedCluster, ConnectedClusterIdentity, \
     ListClusterUserCredentialProperties
 from .vendored_sdks.preview_2022_10_01.models import ConnectedCluster as ConnectedClusterPreview
 from .vendored_sdks.preview_2022_10_01.models import ConnectedClusterPatch as ConnectedClusterPatchPreview
-from threading import Timer, Thread
 import sys
 import hashlib
 import re

@@ -29,8 +29,6 @@ CONFIG = {}  # dictionary of configurations
 config_path = os.path.join(os.path.dirname(__file__), "config.json")
 if not os.path.isfile(config_path):
     CONFIG["customLocationsOid"] = ""
-    CONFIG["rbacAppId"] = "fakeRbacAppId"
-    CONFIG["rbacAppSecret"] = "fakeRbacAppSecret"
     CONFIG["location"] = "eastus2euap"
 else:
     with open(config_path, 'r') as f:
@@ -38,7 +36,7 @@ else:
     for key in CONFIG:
         if not CONFIG[key]:
             raise RequiredArgumentMissingError(f"Missing required configuration in {config_path} file. Make sure all \
-                properties are populated.")
+properties are populated.")
 
 
 def _get_test_data_file(filename):
@@ -626,8 +624,8 @@ class Connectedk8sScenarioTest(LiveScenarioTest):
                 for conn in proc.connections():
                     if conn.laddr.port == consts.API_SERVER_PORT or conn.laddr.port == consts.CLIENT_PROXY_PORT:
                         raise ValidationError(f"Ports {consts.API_SERVER_PORT} or {consts.CLIENT_PROXY_PORT} are in \
-                            use by process named {proc.name()}. Please kill it before proceeding with the live test.\
-                                \nProcess currently using the ports: {proc}")
+use by process named {proc.name()}. Please kill it before proceeding with the live test. \
+\nProcess currently using the ports: {proc}")
             # Might get AccessDenied in Unix environments. This is because elevated privilege is required to view \
                 # system and root processes.
             # The proxy process is not a system or root process, so we ignore the AccessDenied exceptions.
@@ -636,9 +634,8 @@ class Connectedk8sScenarioTest(LiveScenarioTest):
                 continue
         if access_denied:
             print(f"""Warning: the test does not have elevated privileges to access some processes to verify that \
-                they are not using the ports required by the proxy process.
-If there are any issues with the test, please verify manually that there are no processes using ports \
-    {consts.API_SERVER_PORT} and {consts.CLIENT_PROXY_PORT}.""")
+they are not using the ports required by the proxy process. If there are any issues with the test, please verify \
+manually that there are no processes using ports {consts.API_SERVER_PORT} and {consts.CLIENT_PROXY_PORT}.""")
         self.cmd('aks create -g {rg} -n {managed_cluster_name} --generate-ssh-keys')
         self.cmd('aks get-credentials -g {rg} -n {managed_cluster_name} -f {kubeconfig} --admin')
         self.cmd('connectedk8s connect -g {rg} -n {name} -l {location} --tags foo=doo --kube-config {kubeconfig} \
@@ -748,8 +745,8 @@ Proxy process stderr retrieval attempt:\n{proxy_process_stderr}""")
         proxy_process_stdout = proxy_process_stdout.decode("utf-8") if proxy_process_stdout else None
         proxy_process_stderr = proxy_process_stderr.decode("utf-8") if proxy_process_stderr else None
         # For some reason logger.info doesn't output to stdout during the test.
-        print(f"Output received while exiting proxy process:\nstdout:\n{proxy_process_stdout}\
-              \nstderr:{proxy_process_stderr}")
+        print(f"Output received while exiting proxy process:\nstdout:\n{proxy_process_stdout} \
+              \nstderr: {proxy_process_stderr}")
 
         # Clean up the cluster.
         self.cmd('connectedk8s delete -g {rg} -n {name} --kube-config {kubeconfig} --kube-context \

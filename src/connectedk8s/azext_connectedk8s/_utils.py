@@ -10,9 +10,7 @@ import subprocess
 from subprocess import Popen, PIPE
 import time
 from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 import json
-from knack.util import CLIError
 from knack.log import get_logger
 from knack.prompting import NoTTYException, prompt_y_n
 from azure.cli.core.commands.client_factory import get_subscription_id
@@ -95,7 +93,7 @@ def get_chart_path(registry_path, kube_config, kube_context, helm_client_locatio
     # Pulling helm chart from registry
     os.environ['HELM_EXPERIMENTAL_OCI'] = '1'
     pull_helm_chart(registry_path, kube_config, kube_context, helm_client_location, chart_name)
-    
+
     # Exporting Helm chart
     chart_export_path = os.path.join(os.path.expanduser('~'), '.azure', chart_folder_name)
     try:
